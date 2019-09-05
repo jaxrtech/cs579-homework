@@ -89,12 +89,13 @@ def robust_request(twitter, resource, params, max_tries=5):
       A TwitterResponse object, or None if failed.
     """
     for i in range(max_tries):
-        request = twitter.request(resource, params)
-        if request.status_code == 200:
-            return request
-        else:
-            print('Got error %s \nsleeping for 15 minutes.' % request.text)
+        resp = twitter.request(resource, params)
+        if resp.status_code == 200:
+            return resp
+        elif resp.status_code in [420, 429]:
+            print('Got error %s \nsleeping for 15 minutes.' % resp.text)
             sys.stderr.flush()
+            
             time.sleep(61 * 15)
 
 
@@ -116,7 +117,7 @@ def get_users(twitter, screen_names):
     >>> [u['id'] for u in users]
     [6253282, 783214]
     """
-    return twitter.request('users/lookup', {'screen_name': ','.join(screen_names)})
+    return robust_request(twitter, 'users/lookup', {'screen_name': ','.join(screen_names)})
 
 
 def get_friends(twitter, screen_name):
@@ -140,7 +141,7 @@ def get_friends(twitter, screen_name):
     >>> get_friends(twitter, 'aronwc')[:5]
     [695023, 1697081, 8381682, 10204352, 11669522]
     """
-    return list(twitter.request('friends/ids', {'screen_name': 'twitter', 'count': 5000}))
+    return list(robust_request(twitter, 'friends/ids', {'screen_name': screen_name, 'count': 5000}))
 
 
 def add_all_friends(twitter, users):
@@ -258,7 +259,7 @@ def followed_by_bernie_and_donald(users, twitter):
     
     overlaps = friend_overlap_ids([bernie, trump])
     overlap_ids = [str(x) for x in overlaps[0][2]]
-    overlap_users = twitter.request('users/lookup', {'user_id': ','.join(overlap_ids)})
+    overlap_users = robust_request(twitter, 'users/lookup', {'user_id': ','.join(overlap_ids)})
     return [u['screen_name'] for u in overlap_users]
 
 
@@ -277,8 +278,17 @@ def create_graph(users, friend_counts):
     Returns:
       A networkx Graph
     """
-    ###TODO
-    pass
+    g = nx.Graph()
+    g.add_nodes_from([u['screen_name'] for u in users])
+    
+    uids = { u['id']: u['screen_name'] for u in users}
+    for u in users:
+        friend_ids = [(x if x not in uids.keys() else uids[x]) for x in u['friends'] if friend_counts[x] > 1]
+        source = u['screen_name']
+        edges = [(source, tid) for tid in friend_ids]
+        g.add_edges_from(edges)
+    
+    return g
 
 
 def draw_network(graph, users, filename):
@@ -291,8 +301,9 @@ def draw_network(graph, users, filename):
     Your figure does not have to look exactly the same as mine, but try to
     make it look presentable.
     """
-    ###TODO
-    pass
+    fig = plt.figure(figsize=(10, 10))
+    nx.draw_networkx(graph)
+    plt.savefig(filename)
 
 
 def main():
