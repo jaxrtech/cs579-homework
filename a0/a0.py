@@ -31,16 +31,17 @@ Your output should match the sample provided in Log.txt.
 
 # Imports you'll need.
 from collections import Counter
+from itertools import combinations
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys
 import time
 from TwitterAPI import TwitterAPI
 
-consumer_key = 'fixme'
-consumer_secret = 'fixme'
-access_token = 'fixme'
-access_token_secret = 'fixme'
+consumer_key = '9ro1cAJheJh9kz9eZDreaHC12'
+consumer_secret = 'FmCnTcjF6HJ91oBgs3O2S8p5XZj2MMHDdbF5G2C3IT1nX7Iq9K'
+access_token = '1049529060240576512-RmAdKNfbCyzawfektS7xZ1OAtqSJnJ'
+access_token_secret = 'ywOnGnS4W5tnmd6NMCqgPZ0JZzLUueoZ5jV0aGT6Ut9x1'
 
 
 # This method is done for you.
@@ -66,8 +67,11 @@ def read_screen_names(filename):
     >>> read_screen_names('candidates.txt')
     ['BernieSanders', 'JoeBiden', 'SenWarren', 'realDonaldTrump']
     """
-    ###TODO
-    pass
+    names = []
+    with open(filename, 'r') as f:
+        names = f.read().splitlines()
+    
+    return sorted(names)
 
 
 # I've provided the method below to handle Twitter's rate limiting.
@@ -112,8 +116,7 @@ def get_users(twitter, screen_names):
     >>> [u['id'] for u in users]
     [6253282, 783214]
     """
-    ###TODO
-    pass
+    return twitter.request('users/lookup', {'screen_name': ','.join(screen_names)})
 
 
 def get_friends(twitter, screen_name):
@@ -137,8 +140,7 @@ def get_friends(twitter, screen_name):
     >>> get_friends(twitter, 'aronwc')[:5]
     [695023, 1697081, 8381682, 10204352, 11669522]
     """
-    ###TODO
-    pass
+    return list(twitter.request('friends/ids', {'screen_name': 'twitter', 'count': 5000}))
 
 
 def add_all_friends(twitter, users):
@@ -159,8 +161,8 @@ def add_all_friends(twitter, users):
     >>> users[0]['friends'][:5]
     [695023, 1697081, 8381682, 10204352, 11669522]
     """
-    ###TODO
-    pass
+    for user in users:
+        user['friends'] = get_friends(twitter, user['screen_name'])
 
 
 def print_num_friends(users):
@@ -171,8 +173,10 @@ def print_num_friends(users):
     Returns:
         Nothing
     """
-    ###TODO
-    pass
+    for user in users:
+        name = user['screen_name']
+        num_friends = len(user['friends'])
+        print('{} {}'.format(name, num_friends))
 
 
 def count_friends(users):
@@ -188,8 +192,24 @@ def count_friends(users):
     >>> c.most_common()
     [(2, 3), (3, 2), (1, 1)]
     """
-    ###TODO
-    pass
+    flattened_ids = [tid for user in users for tid in user['friends']]
+    return Counter(flattened_ids)
+
+
+def friend_overlap_ids(users):
+    screen_names = [user['screen_name'] for user in users]
+    pairs = combinations(screen_names, 2)
+    
+    lookup = { user['screen_name']: user['friends'] for user in users }
+    
+    def f():
+        for (x, y) in pairs:
+            xs = set(lookup[x])
+            ys = set(lookup[y])
+            overlap = xs.intersection(ys)
+            yield (x, y, overlap)
+    
+    return list(f())
 
 
 def friend_overlap(users):
@@ -213,8 +233,9 @@ def friend_overlap(users):
     ...     ])
     [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)]
     """
-    ###TODO
-    pass
+    overlap = friend_overlap_ids(users)
+    return [(x[0], x[1], len(x[2])) for x in overlap]
+
 
 
 def followed_by_bernie_and_donald(users, twitter):
@@ -231,8 +252,14 @@ def followed_by_bernie_and_donald(users, twitter):
         A list of strings containing the Twitter screen_names of the users
         that are followed by both Bernie Sanders and Donald Trump.
     """
-    ###TODO
-    pass
+    lookup = { user['screen_name']: user for user in users }
+    bernie = lookup['BernieSanders']
+    trump = lookup['realDonaldTrump']
+    
+    overlaps = friend_overlap_ids([bernie, trump])
+    overlap_ids = [str(x) for x in overlaps[0][2]]
+    overlap_users = twitter.request('users/lookup', {'user_id': ','.join(overlap_ids)})
+    return [u['screen_name'] for u in overlap_users]
 
 
 def create_graph(users, friend_counts):
