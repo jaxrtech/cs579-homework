@@ -1,0 +1,123 @@
+Grade: 16.00/35.00
+
+4 Deduction(s):
+
+--------------
+#1: 6.00 points
+Failing test: test_friend_overlap: 
+        @points=6
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a0/a0_test.py", line 56, in test_friend_overlap
+    self.assertListEqual([tuple(i) for i in r], [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)])
+AssertionError: Lists differ: [('a', 'b', 2), ('a', 'c', 3), ('b', 'c', 2)] != [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)]
+
+First differing element 0:
+('a', 'b', 2)
+('a', 'c', 3)
+
+- [('a', 'b', 2), ('a', 'c', 3), ('b', 'c', 2)]
+?         ^   ^          ^   ^
+
++ [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)]
+?         ^   ^          ^   ^
+
+
+source:
+    def test_friend_overlap(self):
+         """
+         @points=6
+         """
+         r = friend_overlap([
+                 {'screen_name': 'a', 'friends': [1, 2, 3]},
+                 {'screen_name': 'b', 'friends': [2, 3, 4]},
+                 {'screen_name': 'c', 'friends': [1, 2, 3]},
+                 ])
+         self.assertListEqual([tuple(i) for i in r], [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)])
+--------------
+
+--------------
+#2: 6.00 points
+Failing test: test_get_friends: 
+        @points=6
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a0/a0_test.py", line 26, in test_get_friends
+    self.assertListEqual(f, [695023, 1697081, 8381682, 10204352, 11669522])
+AssertionError: Lists differ: [579305318, 93069110, 90155533, 216939636, 264501255] != [695023, 1697081, 8381682, 10204352, 11669522]
+
+First differing element 0:
+579305318
+695023
+
+- [579305318, 93069110, 90155533, 216939636, 264501255]
++ [695023, 1697081, 8381682, 10204352, 11669522]
+
+source:
+    def test_get_friends(self):
+         """
+         @points=6
+         """
+         twitter = get_twitter()
+         f = list(get_friends(twitter, 'aronwc')[:5])
+         self.assertListEqual(f, [695023, 1697081, 8381682, 10204352, 11669522])
+--------------
+
+--------------
+#3: 4.00 points
+Failing test: test_create_graph: 
+        @points=4
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a0/a0_test.py", line 81, in test_create_graph
+    Counter({1: 2, 2: 3, 3: 2, 4:1})
+  File "students/jaxrtech/a0/a0.py", line 284, in create_graph
+    uids = { u['id']: u['screen_name'] for u in users}
+  File "students/jaxrtech/a0/a0.py", line 284, in <dictcomp>
+    uids = { u['id']: u['screen_name'] for u in users}
+KeyError: 'id'
+
+source:
+    def test_create_graph(self):
+         """
+         @points=4
+         """
+         graph = create_graph(
+             [{'screen_name': 'a', 'friends': [1, 2, 3]},
+              {'screen_name': 'b', 'friends': [2, 3, 4]},
+              {'screen_name': 'c', 'friends': [1, 2, 3]}],
+             Counter({1: 2, 2: 3, 3: 2, 4:1})
+             )
+         n = len(graph.nodes())
+         e = len(graph.edges())
+         self.assertEqual(n, 6)
+         self.assertEqual(e, 8)
+--------------
+
+--------------
+#4: 3.00 points
+Failing test: test_followed_by_bernie_and_donald: 
+        @points=3
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a0/a0_test.py", line 67, in test_followed_by_bernie_and_donald
+    r = sorted(followed_by_bernie_and_donald(users, twitter))
+  File "students/jaxrtech/a0/a0.py", line 257, in followed_by_bernie_and_donald
+    bernie = lookup['BernieSanders']
+KeyError: 'BernieSanders'
+
+source:
+    def test_followed_by_bernie_and_donald(self):
+         """
+         @points=3
+         """
+         twitter = get_twitter()
+         screen_names = ['DrJillStein', 'GovGaryJohnson', 'HillaryClinton', 'realDonaldTrump']
+         users = sorted(get_users(twitter, screen_names), key=lambda x: x['screen_name'])
+         add_all_friends(twitter, users)
+         r = sorted(followed_by_bernie_and_donald(users, twitter))
+         #if type(r) is list:
+         #    r = r[0]
+         self.assertListEqual(r, ['VP'])
+--------------
+
