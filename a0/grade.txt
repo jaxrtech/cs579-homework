@@ -1,6 +1,6 @@
-Grade: 16.00/35.00
+Grade: 19.00/35.00
 
-4 Deduction(s):
+3 Deduction(s):
 
 --------------
 #1: 6.00 points
@@ -92,32 +92,5 @@ source:
          e = len(graph.edges())
          self.assertEqual(n, 6)
          self.assertEqual(e, 8)
---------------
-
---------------
-#4: 3.00 points
-Failing test: test_followed_by_bernie_and_donald: 
-        @points=3
-        
-Traceback (most recent call last):
-  File "../assignments-sol/a0/a0_test.py", line 67, in test_followed_by_bernie_and_donald
-    r = sorted(followed_by_bernie_and_donald(users, twitter))
-  File "students/jaxrtech/a0/a0.py", line 257, in followed_by_bernie_and_donald
-    bernie = lookup['BernieSanders']
-KeyError: 'BernieSanders'
-
-source:
-    def test_followed_by_bernie_and_donald(self):
-         """
-         @points=3
-         """
-         twitter = get_twitter()
-         screen_names = ['DrJillStein', 'GovGaryJohnson', 'HillaryClinton', 'realDonaldTrump']
-         users = sorted(get_users(twitter, screen_names), key=lambda x: x['screen_name'])
-         add_all_friends(twitter, users)
-         r = sorted(followed_by_bernie_and_donald(users, twitter))
-         #if type(r) is list:
-         #    r = r[0]
-         self.assertListEqual(r, ['VP'])
 --------------
 
