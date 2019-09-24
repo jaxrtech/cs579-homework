@@ -438,10 +438,26 @@ def brute_force_norm_cut(graph, max_size):
     >>> sorted(r)[0]
     (0.41666666666666663, [('A', 'B'), ('B', 'D')])
     """
-    ###TODO
-    pass
-
-
+    DEBUG = False
+    edges = graph.edges()
+    results = []
+    for k in reversed(range(1, max_size + 1)):
+        cuts = combinations(edges, k)
+        for es in cuts:
+            g = graph.copy()
+            if DEBUG: print(' - try {}'.format(list(es)))
+            for e in es:
+                g.remove_edge(*e)
+            comps = get_components(g)
+            if len(comps) == 2:
+                # found acceptable cut
+                if DEBUG: print(' --> YES'.format(list(es)))
+                score = norm_cut(comps[0], comps[1], graph)
+                if DEBUG: print(' --> norm = {:.2f} | [0] = {} | [1] = {}'.format(score, comps[0].nodes(), comps[1].nodes()))
+                result = (score, list(es))
+                results.append(result)
+    
+    return results
 
 
 def score_max_depths(graph, max_depths):
