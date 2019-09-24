@@ -31,6 +31,7 @@ def example_graph():
     g.add_edges_from([('A', 'B'), ('A', 'C'), ('B', 'C'), ('B', 'D'), ('D', 'E'), ('D', 'F'), ('D', 'G'), ('E', 'F'), ('G', 'F')])
     return g
 
+
 def bfs(graph, root, max_depth):
     """
     Perform breadth-first search to compute the shortest paths from a root node to all
@@ -117,8 +118,8 @@ def bfs(graph, root, max_depth):
                 if k not in distances.keys() or (distances[k] > distances[n]):
                     if d + 1 <= max_depth:
                         parents[k].append(n)
-                        parents_debug = sorted((node, sorted(ps)) for node, ps in parents.items())
-                        if DEBUG:
+                        if DEBUG:    
+                            parents_debug = sorted((node, sorted(ps)) for node, ps in parents.items())
                             print("parents[{}] = {} | {}".format(k, n, parents_debug))
         
         d += 1
@@ -139,7 +140,7 @@ def complexity_of_bfs(V, E, K):
     >>> type(v) == int or type(v) == float
     True
     """
-    return K * math.log(V + E)
+    return (V + E) * math.log(K)
 
 
 def bottom_up(root, node2distances, node2num_paths, node2parents):
@@ -177,6 +178,10 @@ def bottom_up(root, node2distances, node2num_paths, node2parents):
     >>> sorted(result.items())
     [(('A', 'B'), 1.0), (('B', 'C'), 1.0), (('B', 'D'), 3.0), (('D', 'E'), 4.5), (('D', 'G'), 0.5), (('E', 'F'), 1.5), (('F', 'G'), 0.5)]
     """
+    # helpers
+    unnest = lambda xs: sum(xs, [])
+    make_edge = lambda a, b: tuple(sorted((a, b)))
+    
     # get the nodes at each level
     nodes_by_level = defaultdict(list)
     for (n, d) in node2distances.items():
@@ -189,11 +194,11 @@ def bottom_up(root, node2distances, node2num_paths, node2parents):
     
     nodes = node2distances.keys()
     children = node2parents.keys()
-    unnest = lambda xs: sum(xs, [])
     parents = set(unnest(node2parents.values()))
     leaves = [n for n in nodes
-                if (n in children) and (n not in parents)]
+                    if (n in children) and (n not in parents)]
     
+    # run girvan-newman through the third and final steps (pg 354)
     UNIT_CREDIT = 1
     for k, level in enumerate(levels):
         if k == len(levels) - 1:
@@ -209,18 +214,17 @@ def bottom_up(root, node2distances, node2num_paths, node2parents):
                     c = UNIT_CREDIT / divisions
                     credit[p] += c                    
                     
-                    edge = tuple(sorted((n, p)))
+                    edge = make_edge(n, p)
                     credit_edges[edge] = c
             else:
                 for p in parents:
                     c = credit[n]
                     credit[p] += c
                     
-                    edge = tuple(sorted((n, p)))
+                    edge = make_edge(n, p)
                     credit_edges[edge] = c
     
     return credit_edges
-    
     
 
 def approximate_betweenness(graph, max_depth):
@@ -244,8 +248,17 @@ def approximate_betweenness(graph, max_depth):
     >>> sorted(approximate_betweenness(example_graph(), 2).items())
     [(('A', 'B'), 2.0), (('A', 'C'), 1.0), (('B', 'C'), 2.0), (('B', 'D'), 6.0), (('D', 'E'), 2.5), (('D', 'F'), 2.0), (('D', 'G'), 2.5), (('E', 'F'), 1.5), (('F', 'G'), 1.5)]
     """
-    ###TODO
-    pass
+    nodes = graph.nodes()
+    totals = defaultdict(float)
+    
+    for n in nodes:
+        node2distances, node2num_paths, node2parents = bfs(graph, n, max_depth)
+        result = bottom_up(n, node2distances, node2num_paths, node2parents)
+        for edge, credit in result.items():
+            totals[edge] = totals[edge] + credit
+    
+    totals_div2 = { edge: (credit/2) for edge, credit in totals.items() }
+    return dict(totals_div2)
 
 
 def get_components(graph):
@@ -285,8 +298,24 @@ def partition_girvan_newman(graph, max_depth):
     >>> sorted(components[1].nodes())
     ['D', 'E', 'F', 'G']
     """
-    ###TODO
-    pass
+    g = graph.copy()
+    scores = approximate_betweenness(g, max_depth)
+    
+    def order_by(kv):
+        nodes, credit = kv
+        edge = ''.join(nodes)
+        return (credit, edge)
+    scores_sorted = sorted(scores.items(), key=order_by, reverse=True)
+    edges_sorted = (edge[0] for edge in scores_sorted)
+
+    for edge in edges_sorted:
+        components = get_components(g)
+        if len(components) > 1:
+            return components
+        g.remove_edge(*edge)
+    
+    raise RuntimeError('unable to partition graph')
+    
 
 def get_subgraph(graph, min_degree):
     """Return a subgraph containing nodes whose degree is
@@ -305,8 +334,9 @@ def get_subgraph(graph, min_degree):
     >>> len(subgraph.edges())
     2
     """
-    ###TODO
-    pass
+    g = graph
+    selected = [n for n in g.nodes() if g.degree[n] >= min_degree]
+    return g.subgraph(selected)
 
 
 """"
@@ -314,7 +344,11 @@ Compute the normalized cut for each discovered cluster.
 I've broken this down into the three next methods.
 """
 
-def _edge_pairs(nodes, graph):
+def get_edge_pairs(nodes, graph):
+    """
+    Helper function to compute all the pairs of edges for a given set of nodes
+    Returns a set of all pairs of edges.
+    """
     edges = set()
     for n in nodes:
         es = { tuple(sorted([n, k])) for k in graph[n].keys() }
@@ -333,7 +367,7 @@ def volume(nodes, graph):
     >>> volume(['A', 'B', 'C'], example_graph())
     4
     """
-    edges = _edge_pairs(nodes, graph)
+    edges = get_edge_pairs(nodes, graph)
     return len(edges)
 
 
@@ -352,8 +386,8 @@ def cut(S, T, graph):
     >>> cut(['A', 'B', 'C'], ['D', 'E', 'F', 'G'], example_graph())
     1
     """
-    left_edges = _edge_pairs(S, graph)
-    right_edges = _edge_pairs(T, graph)
+    left_edges = get_edge_pairs(S, graph)
+    right_edges = get_edge_pairs(T, graph)
     cross = left_edges.intersection(right_edges)
     return len(cross)
 
