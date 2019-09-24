@@ -75,8 +75,56 @@ def bfs(graph, root, max_depth):
     >>> sorted((node, sorted(parents)) for node, parents in node2parents.items())
     [('B', ['D']), ('D', ['E']), ('F', ['E']), ('G', ['D', 'F'])]
     """
-    ###TODO
-    pass
+    DEBUG = False
+    d = 0
+    q = deque([root])
+    distances = {}
+    num_paths = {}
+    parents = defaultdict(list)
+    while q and d <= max_depth:
+        if DEBUG:
+            print("d = {}".format(d))
+        # number of nodes at this level
+        w = len(q)
+        if DEBUG:
+            print("got {} nodes at level".format(w))
+        level = set()  # prevent making children at current level
+        for _ in range(w):
+            n = q.popleft()
+            num_paths.setdefault(n, 1)
+            if DEBUG:
+                print(" -> pop <{}>".format(n))
+            if n in distances.keys():
+                if DEBUG:
+                    print(" -> already visted <{}> (num_paths += 1)".format(n))    
+                num_paths[n] += 1
+                continue
+            
+            distances[n] = d
+            level.add(n)
+        
+        for n in sorted(level):
+            if DEBUG:
+                print(" -> expand <{}>".format(n))
+            children_raw = graph[n].keys()
+            children = set(children_raw).difference(level)
+            unvisited = set(children).difference(distances.keys())
+            for k in children:
+                if k in unvisited:
+                    q.append(k)
+                    if DEBUG:
+                        print(" ---> push <{}>".format(k))
+                if k not in distances.keys() or (distances[k] > distances[n]):
+                    if d + 1 <= max_depth:
+                        parents[k].append(n)
+                        parents_debug = sorted((node, sorted(ps)) for node, ps in parents.items())
+                        if DEBUG:
+                            print("parents[{}] = {} | {}".format(k, n, parents_debug))
+        
+        d += 1
+    
+    return distances, num_paths, parents
+        
 
 
 def complexity_of_bfs(V, E, K):
@@ -91,8 +139,7 @@ def complexity_of_bfs(V, E, K):
     >>> type(v) == int or type(v) == float
     True
     """
-    ###TODO
-    pass
+    return K * math.log(V + E)
 
 
 def bottom_up(root, node2distances, node2num_paths, node2parents):
@@ -130,9 +177,51 @@ def bottom_up(root, node2distances, node2num_paths, node2parents):
     >>> sorted(result.items())
     [(('A', 'B'), 1.0), (('B', 'C'), 1.0), (('B', 'D'), 3.0), (('D', 'E'), 4.5), (('D', 'G'), 0.5), (('E', 'F'), 1.5), (('F', 'G'), 0.5)]
     """
-    ###TODO
-    pass
-
+    # get the nodes at each level
+    nodes_by_level = defaultdict(list)
+    for (n, d) in node2distances.items():
+        nodes_by_level[d].append(n)
+    
+    levels = [nodes_by_level[d] for d in sorted(nodes_by_level.keys(), reverse=True)]
+    
+    credit = defaultdict(int)
+    credit_edges = {}
+    
+    nodes = node2distances.keys()
+    children = node2parents.keys()
+    unnest = lambda xs: sum(xs, [])
+    parents = set(unnest(node2parents.values()))
+    leaves = [n for n in nodes
+                if (n in children) and (n not in parents)]
+    
+    UNIT_CREDIT = 1
+    for k, level in enumerate(levels):
+        if k == len(levels) - 1:
+            break
+        
+        for n in level:
+            credit[n] += UNIT_CREDIT
+            
+            parents = node2parents[n]
+            if n in leaves:
+                divisions = len(parents)
+                for p in parents:
+                    c = UNIT_CREDIT / divisions
+                    credit[p] += c                    
+                    
+                    edge = tuple(sorted((n, p)))
+                    credit_edges[edge] = c
+            else:
+                for p in parents:
+                    c = credit[n]
+                    credit[p] += c
+                    
+                    edge = tuple(sorted((n, p)))
+                    credit_edges[edge] = c
+    
+    return credit_edges
+    
+    
 
 def approximate_betweenness(graph, max_depth):
     """
@@ -225,6 +314,13 @@ Compute the normalized cut for each discovered cluster.
 I've broken this down into the three next methods.
 """
 
+def _edge_pairs(nodes, graph):
+    edges = set()
+    for n in nodes:
+        es = { tuple(sorted([n, k])) for k in graph[n].keys() }
+        edges = edges.union(es)
+    return edges
+
 def volume(nodes, graph):
     """
     Compute the volume for a list of nodes, which
@@ -237,8 +333,8 @@ def volume(nodes, graph):
     >>> volume(['A', 'B', 'C'], example_graph())
     4
     """
-    ###TODO
-    pass
+    edges = _edge_pairs(nodes, graph)
+    return len(edges)
 
 
 def cut(S, T, graph):
@@ -256,8 +352,10 @@ def cut(S, T, graph):
     >>> cut(['A', 'B', 'C'], ['D', 'E', 'F', 'G'], example_graph())
     1
     """
-    ###TODO
-    pass
+    left_edges = _edge_pairs(S, graph)
+    right_edges = _edge_pairs(T, graph)
+    cross = left_edges.intersection(right_edges)
+    return len(cross)
 
 
 def norm_cut(S, T, graph):
@@ -271,8 +369,9 @@ def norm_cut(S, T, graph):
       An float representing the normalized cut value
 
     """
-    ###TODO
-    pass
+    a = cut(S, T, graph) / volume(S, graph)
+    b = cut(S, T, graph) / volume(T, graph)
+    return a + b
 
 
 def brute_force_norm_cut(graph, max_size):
