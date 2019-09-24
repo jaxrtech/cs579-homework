@@ -477,8 +477,14 @@ def score_max_depths(graph, max_depths):
       norm_cut value obtained by the partitions returned by
       partition_girvan_newman. See Log.txt for an example.
     """
-    ###TODO
-    pass
+    results = []
+    for k in max_depths:
+        comps = partition_girvan_newman(graph, k)
+        S = comps[0]
+        T = comps[1]
+        score = norm_cut(S, T, graph)
+        results.append((k, score))
+    return results
 
 
 ## Link prediction
@@ -563,9 +569,9 @@ def jaccard(graph, node, k):
     def order_by(kv):
         nodes, score = kv
         edge = ''.join(nodes)
-        return (score, edge)
+        return (-score, edge)
     
-    scores_sorted = sorted(scores, key=order_by, reverse=True)
+    scores_sorted = sorted(scores, key=order_by)
     return scores_sorted[:k]
 
 
@@ -587,8 +593,14 @@ def evaluate(predicted_edges, graph):
     >>> evaluate([('D', 'E'), ('D', 'A')], example_graph())
     0.5
     """
-    ###TODO
-    pass
+    edges = set((tuple(sorted(edge)) for edge in graph.edges()))
+    num_found = 0
+    total = len(predicted_edges)
+    for e in predicted_edges:
+        edge = tuple(sorted(e))
+        if edge in edges:
+            num_found += 1
+    return num_found / total
 
 
 """
