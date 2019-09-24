@@ -515,9 +515,12 @@ def make_training_graph(graph, test_node, n):
     >>> sorted(train_graph.neighbors('D'))
     ['F', 'G']
     """
-    ###TODO
-    pass
-
+    g = graph.copy()
+    ns = list(g.neighbors(test_node))
+    edges = [(test_node, n) for n in ns[:n]]
+    for e in edges:
+        g.remove_edge(*e)
+    return g
 
 
 def jaccard(graph, node, k):
