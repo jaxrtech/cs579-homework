@@ -549,9 +549,24 @@ def jaccard(graph, node, k):
     >>> jaccard(train_graph, 'D', 2)
     [(('D', 'E'), 0.5), (('D', 'A'), 0.0)]
     """
-    ###TODO
-    pass
-
+    neighbors_x = set(graph.neighbors(node))
+    scores = []
+    for n in graph.nodes():
+        already_linked = n in neighbors_x
+        if n == node or already_linked:
+            continue
+        neighbors_y = set(graph.neighbors(n))
+        score = len(neighbors_x & neighbors_y) / len(neighbors_x | neighbors_y)
+        edge = (node, n)
+        scores.append((edge, score))
+    
+    def order_by(kv):
+        nodes, score = kv
+        edge = ''.join(nodes)
+        return (score, edge)
+    
+    scores_sorted = sorted(scores, key=order_by, reverse=True)
+    return scores_sorted[:k]
 
 
 def evaluate(predicted_edges, graph):
