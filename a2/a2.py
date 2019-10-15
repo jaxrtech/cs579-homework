@@ -276,8 +276,10 @@ def vectorize(tokens_list, feature_fns, min_freq, vocab=None):
     for doc in docs:
         for f, n in doc.items():
             i = vocab.get(f) or 0
-            if i is None or (appears[f] < min_freq):
+            if i is None:
                 continue
+            if appears[f] < min_freq:
+                n = 0
             indices.append(i)
             data.append(n)
         indptr.append(len(indices))
