@@ -544,9 +544,23 @@ def print_top_misclassified(test_docs, test_labels, X_test, clf, n):
     Returns:
       Nothing; see Log.txt for example printed output.
     """
-    ###TODO
-    pass
-
+    y_pred = clf.predict(X_test)
+    y_prob = clf.predict_proba(X_test)
+    bad_ind = np.nonzero(y_pred - test_labels)[0]
+    bad_probs = y_prob[[bad_ind, y_pred[bad_ind]]]
+    worst_probs_ind = np.argpartition(bad_probs, -n)[-n:]
+    worst_probs_ind = worst_probs_ind[np.argsort(-bad_probs[worst_probs_ind])]  # sort top n desc
+    for i in worst_probs_ind:
+        # get original index
+        j = bad_ind[i]
+        doc = test_docs[j]
+        truth = test_labels[j]
+        pred = y_pred[j]
+        proba = y_prob[j, pred]
+        print("truth={}, predicted={}, proba={}".format(truth, pred, proba))
+        print(doc)
+        print()
+    
 
 def main():
     """
