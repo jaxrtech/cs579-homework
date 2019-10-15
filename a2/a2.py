@@ -276,7 +276,7 @@ def vectorize(tokens_list, feature_fns, min_freq, vocab=None):
     for doc in docs:
         for f, n in doc.items():
             i = vocab.get(f) or 0
-            if i is None: # or (appears[f] < min_freq):
+            if i is None or (appears[f] < min_freq):
                 continue
             indices.append(i)
             data.append(n)
@@ -449,7 +449,8 @@ def fit_best_classifier(docs, labels, best_result):
       vocab...The dict from feature name to column index.
     """
     model = LogisticRegression()
-    X, vocab = vectorize(docs, best_result['features'], best_result['min_freq'])
+    tokens = [tokenize(d) for d in docs]
+    X, vocab = vectorize(tokens, best_result['features'], best_result['min_freq'])
     model.fit(X, labels)
     return model, vocab
 
