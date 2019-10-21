@@ -1,0 +1,76 @@
+Grade: 34.00/40.00
+
+2 Deduction(s):
+
+--------------
+#1: 2.00 points
+Failing test: test_tokenize_2: 
+        @points=2
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a2/a2_test.py", line 28, in test_tokenize_2
+    ['hi', 'there', 'super-duper'])
+AssertionError: Lists differ: ['hi', 'there', 'super', 'duper'] != ['hi', 'there', 'super-duper']
+
+First differing element 2:
+'super'
+'super-duper'
+
+First list contains 1 additional elements.
+First extra element 3:
+'duper'
+
+- ['hi', 'there', 'super', 'duper']
+?                       ^^^^
+
++ ['hi', 'there', 'super-duper']
+?                       ^
+
+
+source:
+    def test_tokenize_2(self):
+         """
+         @points=2
+         """
+         self.assertListEqual(list(tokenize("Hi there super-duper!", keep_internal_punct=True)),
+                              ['hi', 'there', 'super-duper'])
+--------------
+
+--------------
+#2: 4.00 points
+Failing test: test_vectorize_2: 
+        @points=4
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a2/a2_test.py", line 104, in test_vectorize_2
+    [1])
+AssertionError: Lists differ: [0, 0, 0, 1, 0, 0] != [1]
+
+First differing element 0:
+0
+1
+
+First list contains 5 additional elements.
+First extra element 1:
+0
+
+- [0, 0, 0, 1, 0, 0]
++ [1]
+
+source:
+    def test_vectorize_2(self):
+         """
+         @points=4
+         """
+         docs = ["Isn't this movie great?", "Horrible, horrible movie"]
+         tokens_list = [tokenize(d) for d in docs]
+         feature_fns = [token_features]
+         X, vocab = vectorize(tokens_list, feature_fns, min_freq=2)
+         self.assertListEqual(list(X.toarray()[0]),
+                              [1])
+         self.assertListEqual(list(X.toarray()[1]),
+                              [1])
+         self.assertListEqual(sorted(vocab.items(), key=lambda x: x[1]),
+                              [('token=movie', 0)])
+--------------
+
