@@ -1,0 +1,184 @@
+Grade: 34.00/50.00
+
+7 Deduction(s):
+
+--------------
+#1: 5.00 points
+Failing test: test_bfs_3: 
+        @points=5
+
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 110, in test_bfs_3
+    [('A', 1), ('B', 1), ('C', 1), ('D', 1), ('E', 3), ('F', 3), ('G', 2)])
+AssertionError: Lists differ: [('A', 1), ('B', 1), ('C', 1), ('D', 1), ('E', 2), ('F', 1), ('G', 2)] != [('A', 1), ('B', 1), ('C', 1), ('D', 1), ('E', 3), ('F', 3), ('G', 2)]
+
+First differing element 4:
+('E', 2)
+('E', 3)
+
+- [('A', 1), ('B', 1), ('C', 1), ('D', 1), ('E', 2), ('F', 1), ('G', 2)]
+?                                                ^         ^
+
++ [('A', 1), ('B', 1), ('C', 1), ('D', 1), ('E', 3), ('F', 3), ('G', 2)]
+?                                                ^         ^
+
+
+source:
+    def test_bfs_3(self):
+         """
+         @points=5
+ 
+         """
+         graph = example_graph2()
+         node2distances, node2num_paths, node2parents = bfs(graph, 'A', max_depth=10)
+         res = sorted(node2distances.items())
+         res = [(str(x), int(y)) for x,y in res]
+         self.assertListEqual(res,
+                              [('A', 0), ('B', 2), ('C', 1), ('D', 1), ('E', 3), ('F', 4), ('G', 2)])
+         res = sorted(node2num_paths.items())
+         res = [(str(x), int(y)) for x,y in res]
+         self.assertListEqual(res,
+                              [('A', 1), ('B', 1), ('C', 1), ('D', 1), ('E', 3), ('F', 3), ('G', 2)])
+         res = sorted((node, sorted(parents)) for node, parents in node2parents.items())
+         self.assertListEqual(res,
+                              [('B', ['D']), ('C', ['A']), ('D', ['A']), ('E', ['B', 'G']), ('F', ['E']), ('G', ['C', 'D'])])
+         b = bottom_up('A', node2distances, node2num_paths, node2parents)
+         self.assertEqual(1.0, round(b[('E', 'F')], 2))
+         self.assertEqual(3.83, round(b[('A', 'D')], 2))
+         self.assertEqual(1.67, round(b[('B', 'D')], 2))
+         self.assertEqual(1.17, round(b[('D', 'G')], 2))
+         self.assertEqual(2.17, round(b[('A', 'C')], 2))
+         self.assertEqual(0.67, round(b[('B', 'E')], 2))
+         self.assertEqual(1.33, round(b[('E', 'G')], 2))
+         self.assertEqual(1.17, round(b[('C', 'G')], 2))
+--------------
+
+--------------
+#2: 1.00 points
+Failing test: test_complexity_1: 
+        @points=1
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 132, in test_complexity_1
+    self.assertTrue(x == y, 'k has no effect in worst case')
+AssertionError: False is not true : k has no effect in worst case
+
+source:
+    def test_complexity_1(self):
+         """
+         @points=1
+         """
+         x = complexity_of_bfs(1000, 500, 10)
+         y = complexity_of_bfs(1000, 500, 50)
+         self.assertTrue(y is not None, 'nothing returned')
+         self.assertTrue(x == y, 'k has no effect in worst case')
+--------------
+
+--------------
+#3: 1.00 points
+Failing test: test_complexity_4: 
+        @points=1
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 163, in test_complexity_4
+    self.assertEqual(round(y - x, 0), 4000, 'additive')
+AssertionError: 9210.0 != 4000 : additive
+
+source:
+    def test_complexity_4(self):
+         """
+         @points=1
+         """
+         x = complexity_of_bfs(2000, 500, 10)
+         y = complexity_of_bfs(6000, 500, 10)
+         self.assertEqual(round(y - x, 0), 4000, 'additive')
+         x = complexity_of_bfs(2000, 500, 10)
+         y = complexity_of_bfs(2000, 1500, 10)
+         self.assertEqual(round(y - x, 0), 1000, 'additive')
+--------------
+
+--------------
+#4: 2.00 points
+Failing test: test_get_second_eigenvector: 
+        @points=2
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 252, in test_get_second_eigenvector
+    v = np.round(get_second_eigenvector(example_graph()), 2)
+NameError: name 'np' is not defined
+
+source:
+    def test_get_second_eigenvector(self):
+         """
+         @points=2
+         """        
+         v = np.round(get_second_eigenvector(example_graph()), 2)
+         # to account for different node orderings, we just check
+         # that the eigenvalues are the same.
+         self.assertListEqual(sorted([ 0.49,  0.3 ,  0.49, -0.21, -0.36, -0.36, -0.36]),
+                              sorted(list(v)))
+--------------
+
+--------------
+#5: 2.00 points
+Failing test: test_get_second_eigenvector_2: 
+        @points=2
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 262, in test_get_second_eigenvector_2
+    v = np.round(get_second_eigenvector(example_graph2()), 2)
+NameError: name 'np' is not defined
+
+source:
+    def test_get_second_eigenvector_2(self):
+         """
+         @points=2
+         """        
+         v = np.round(get_second_eigenvector(example_graph2()), 2)
+         self.assertListEqual(sorted([-0.41, -0.19, 0.07, -0.12, -0.38, 0.29, 0.74]),
+                              sorted(list(v)))
+--------------
+
+--------------
+#6: 3.00 points
+Failing test: test_partition_by_eigenvector: 
+        @points=3
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 271, in test_partition_by_eigenvector
+    result = partition_by_eigenvector(graph)
+NameError: name 'partition_by_eigenvector' is not defined
+
+source:
+    def test_partition_by_eigenvector(self):
+         """
+         @points=3
+         """        
+         graph = example_graph()
+         result = partition_by_eigenvector(graph)
+         self.assertListEqual(['A', 'B', 'C'], sorted(result[0].nodes()))
+         self.assertListEqual(['D', 'E', 'F', 'G'], sorted(result[1].nodes()))
+--------------
+
+--------------
+#7: 2.00 points
+Failing test: test_partition_by_eigenvector_2: 
+        @points=2
+        
+Traceback (most recent call last):
+  File "../assignments-sol/a1/a1_test.py", line 280, in test_partition_by_eigenvector_2
+    result = partition_by_eigenvector(graph)
+NameError: name 'partition_by_eigenvector' is not defined
+
+source:
+    def test_partition_by_eigenvector_2(self):
+         """
+         @points=2
+         """        
+         graph = example_graph2()
+         result = partition_by_eigenvector(graph)
+         self.assertListEqual(['B', 'E', 'F'], sorted(result[0].nodes()))
+         self.assertListEqual(['A', 'C', 'D', 'G'], sorted(result[1].nodes()))
+--------------
+
